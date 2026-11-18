@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>六爻摇卦 · Hermes 周易</title>
+<style>
+  :root { --bg:#0b0e14; --card:#12161f; --card2:#161b26; --fg:#d7dce5; --d:#8b93a3;
+    --g:#39ff5e; --b:#58a6ff; --y:#e3b341; --edge:rgba(88,166,255,.15); --line:#232a38; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); line-height:1.7; min-height:100vh;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background-image:radial-gradient(900px 400px at 50% -100px, rgba(57,255,94,.06), transparent); }
+  .wrap { max-width:720px; margin:0 auto; padding:32px 20px 60px; }
+  .back { color:var(--d); text-decoration:none; font-size:14px; }
+  .back:hover { color:var(--g); }
+  header { text-align:center; margin:20px 0 6px; }
+  header .ic { font-size:44px; }
+  h1 { font-size:24px; margin-top:8px; }
+  header .sub { color:var(--d); font-size:13.5px; margin-top:6px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:24px; margin-top:24px; }
+  .btn { display:block; margin:0 auto; background:rgba(57,255,94,.1); color:var(--g);
+    border:1px solid rgba(57,255,94,.35); border-radius:100px; padding:10px 42px;
+    font-size:16px; font-family:inherit; cursor:pointer; transition:.2s; }
+  .btn:hover { background:rgba(57,255,94,.2); box-shadow:0 0 18px rgba(57,255,94,.25); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .coins { display:flex; justify-content:center; gap:18px; margin:18px 0 6px; min-height:64px; }
+  .coin { width:58px; height:58px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:26px; background:var(--card2);
+    border:2px solid var(--line); transition:transform .15s; }
+  .coin.spin { animation:sp .12s linear infinite; }
+  @keyframes sp { 50% { transform:rotateY(90deg) scale(.9); } }
+  .yao-row { display:flex; align-items:center; gap:14px; padding:7px 0; }
+  .yao-row .lbl { width:52px; color:var(--d); font-size:13px; text-align:right; font-family:Consolas,monospace; }
+  .yao-bar { display:flex; gap:8px; }
+  .seg { height:14px; border-radius:4px; background:var(--g); box-shadow:0 0 8px rgba(57,255,94,.35); }
+  .seg.yin { background:transparent; border:1.5px solid var(--d); box-shadow:none; width:70px; }
+  .seg.yang { width:150px; }
+  .seg.moving { position:relative; }
+  .seg.moving::after { content:'×'; position:absolute; right:-16px; top:-7px; color:var(--y); font-weight:bold; }
+  .yao-row .tag { color:var(--y); font-size:12px; }
+  .result { margin-top:22px; display:none; }
+  .guaname { text-align:center; font-size:30px; font-weight:700; color:var(--g);
+    text-shadow:0 0 16px rgba(57,255,94,.4); }
+  .guaci { text-align:center; color:var(--fg); margin-top:8px; font-size:15.5px; }
+  .divider { height:1px; background:var(--line); margin:18px 0; }
+  .item { margin-top:12px; }
+  .item .k { color:var(--b); font-size:13.5px; font-weight:600; }
+  .item .v { margin-top:3px; font-size:14.5px; }
+  .bian { text-align:center; margin-top:4px; }
+  .bian .name { font-size:20px; color:var(--y); font-weight:700; }
+  .bian .cap { color:var(--d); font-size:13px; }
+  .note { color:#4a5160; font-size:12.5px; text-align:center; margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 返回菜单</a>
+  <header>
+    <div class="ic">🪙</div>
+    <h1>六爻摇卦</h1>
+    <div class="sub">三枚铜钱摇六次，自下而上成卦 · 心诚则灵</div>
+  </header>
+
+  <div class="panel">
+    <button class="btn" id="shake">开始摇卦</button>
+    <div class="coins" id="coins">
+      <div class="coin">◎</div><div class="coin">◎</div><div class="coin">◎</div>
+    </div>
+    <div id="yaoLines"></div>
+    <div class="result" id="result">
+      <div class="divider"></div>
+      <div class="guaname" id="benName"></div>
+      <div class="guaci" id="benCi"></div>
+      <div class="divider"></div>
+      <div id="dongYao"></div>
+      <div class="divider"></div>
+      <div class="bian">
+        <div class="cap">之卦（变卦）</div>
+        <div class="name" id="bianName"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">六爻占卜源自汉代京房纳甲体系 · 本站解读为简化版 · 结果仅供娱乐参考</p>
+</div>
+
+<script src="js/gua64.js"></script>
+<script>
+var lines = [], moving = [], shaking = false;
+var btn = document.getElementById('shake');
+var coinsEl = document.getElementById('coins');
+var linesEl = document.getElementById('yaoLines');
+
+function renderYao(idx, yang, isMoving) {
+  var row = document.createElement('div');
+  row.className = 'yao-row';
+  var lbl = document.createElement('div');
+  lbl.className = 'lbl';
+  lbl.textContent = yaoName(idx, yang);
+  var bar = document.createElement('div');
+  bar.className = 'yao-bar';
+  if (yang) {
+    var s = document.createElement('div');
+    s.className = 'seg yang' + (isMoving ? ' moving' : '');
+    bar.appendChild(s);
+  } else {
+    var a = document.createElement('div'), b = document.createElement('div');
+    a.className = 'seg yin'; b.className = 'seg yin';
+    if (isMoving) { a.className += ' moving'; b.style.visibility = 'hidden'; }
+    bar.appendChild(a); bar.appendChild(b);
+  }
+  row.appendChild(lbl); row.appendChild(bar);
+  if (isMoving) {
+    var tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.textContent = '动爻';
+    row.appendChild(tag);
+  }
+  row.style.opacity = 0;
+  linesEl.appendChild(row);
+  requestAnimationFrame(function(){ row.style.transition = 'opacity .4s'; row.style.opacity = 1; });
+}
+
+function coinResult() {
+  var sum = 0, faces = [];
+  for (var i = 0; i < 3; i++) {
+    var back = Math.random() < 0.5;
+    sum += back ? 3 : 2;
+    faces.push(back);
+  }
+  return { sum: sum, faces: faces };
+}
+
+function showCoins(faces) {
+  var cs = coinsEl.children;
+  for (var i = 0; i < 3; i++) {
+    cs[i].classList.remove('spin');
+    cs[i].textContent = faces[i] ? '背' : '字';
+    cs[i].style.color = faces[i] ? 'var(--g)' : 'var(--fg)';
+    cs[i].style.borderColor = faces[i] ? 'rgba(57,255,94,.5)' : 'var(--line)';
+  }
+}
+
+function spinCoins() {
+  var cs = coinsEl.children;
+  for (var i = 0; i < 3; i++) cs[i].classList.add('spin');
+}
+
+function finish() {
+  var ben = lookupGua(lines);
+  document.getElementById('benName').textContent = '本卦 · ' + ben.name;
+  document.getElementById('benCi').textContent = '《卦辞》' + ben.guaCi;
+  var dy = document.getElementById('dongYao');
+  dy.innerHTML = '';
+  if (moving.length === 0) {
+    dy.innerHTML = '<div class="item"><div class="k">断曰</div><div class="v">卦无动爻，是为静卦。宜守成持重，以本卦卦辞为断。所问之事，现状平稳，静待时机为上。</div></div>';
+  } else {
+    moving.forEach(function(m) {
+      var yang = lines[m];
+      var it = document.createElement('div');
+      it.className = 'item';
+      it.innerHTML = '<div class="k">' + yaoName(m, yang) + ' 动（第' + (m+1) + '爻）</div><div class="v">' + YAO_POS[m].txt + '</div>';
+      dy.appendChild(it);
+    });
+    var summary = document.createElement('div');
+    summary.className = 'item';
+    summary.innerHTML = '<div class="k">合断</div><div class="v">' + (moving.length === 1
+      ? '一爻独动，事有转机，动处即是玄机。观变卦之象，可知事之走向。'
+      : '多爻乱动，事体纷杂。宜静心再占，或抓主要之动爻为断。') + '</div>';
+    dy.appendChild(summary);
+  }
+  var bian = lookupGua(changedLines(lines, moving));
+  document.getElementById('bianName').textContent = bian.name;
+  document.getElementById('result').style.display = 'block';
+}
+
+btn.addEventListener('click', function() {
+  if (shaking) return;
+  shaking = true;
+  btn.disabled = true;
+  btn.textContent = '摇卦中…';
+  lines = []; moving = [];
+  linesEl.innerHTML = '';
+  document.getElementById('result').style.display = 'none';
+
+  var round = 0;
+  function next() {
+    if (round >= 6) {
+      shaking = false;
+      btn.disabled = false;
+      btn.textContent = '再摇一卦';
+      return;
+    }
+    spinCoins();
+    setTimeout(function() {
+      var r = coinResult();
+      showCoins(r.faces);
+      var yang, isMoving = false;
+      if (r.sum === 9) { yang = true; isMoving = true; }       /* 老阳 */
+      else if (r.sum === 7) { yang = true; }                    /* 少阳 */
+      else if (r.sum === 8) { yang = false; }                   /* 少阴 */
+      else { yang = false; isMoving = true; }                   /* 老阴 */
+      lines.push(yang);
+      if (isMoving) moving.push(round);
+      renderYao(round, yang, isMoving);
+      round++;
+      setTimeout(next, 500);
+    }, 1400);
+  }
+  next();
+});
+</script>
+</body>
+</html>

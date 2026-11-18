@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梅花易数 · Hermes 周易</title>
+<style>
+  :root { --bg:#0b0e14; --card:#12161f; --card2:#161b26; --fg:#d7dce5; --d:#8b93a3;
+    --g:#39ff5e; --b:#58a6ff; --y:#e3b341; --p:#bc8cff; --edge:rgba(88,166,255,.15); --line:#232a38; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); line-height:1.7; min-height:100vh;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background-image:radial-gradient(900px 400px at 50% -100px, rgba(255,120,180,.06), transparent); }
+  .wrap { max-width:720px; margin:0 auto; padding:32px 20px 60px; }
+  .back { color:var(--d); text-decoration:none; font-size:14px; }
+  .back:hover { color:var(--p); }
+  header { text-align:center; margin:20px 0 6px; }
+  header .ic { font-size:44px; }
+  h1 { font-size:24px; margin-top:8px; }
+  header .sub { color:var(--d); font-size:13.5px; margin-top:6px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:24px; margin-top:24px; }
+  .inputs { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; align-items:center; }
+  .inputs input { width:110px; background:var(--card2); border:1px solid var(--line); color:var(--fg);
+    border-radius:8px; padding:9px 12px; font-size:15px; text-align:center; font-family:inherit; outline:none; }
+  .inputs input:focus { border-color:var(--p); }
+  .btnrow { display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .btn { background:rgba(188,140,255,.1); color:var(--p); border:1px solid rgba(188,140,255,.35);
+    border-radius:100px; padding:9px 28px; font-size:15px; font-family:inherit; cursor:pointer; transition:.2s; }
+  .btn:hover { background:rgba(188,140,255,.2); box-shadow:0 0 16px rgba(188,140,255,.25); }
+  .btn.mini { font-size:13px; padding:7px 18px; }
+  .hint { text-align:center; color:var(--d); font-size:12.5px; margin-top:12px; }
+  .result { display:none; margin-top:24px; }
+  .guacard { text-align:center; }
+  .guacard .name { font-size:30px; font-weight:700; color:var(--p); text-shadow:0 0 16px rgba(188,140,255,.4); }
+  .guacard .ci { margin-top:6px; font-size:15px; }
+  .tiyong { display:flex; gap:12px; margin-top:20px; }
+  .tyc { flex:1; border-radius:12px; padding:16px; text-align:center; border:1px solid var(--line); background:var(--card2); position:relative; }
+  .tyc .role { position:absolute; top:8px; right:12px; font-size:12px; color:var(--d); }
+  .tyc .tg { font-size:22px; font-weight:700; }
+  .tyc .wx { margin-top:4px; font-size:13.5px; color:var(--d); }
+  .tyc.ti { border-color:rgba(57,255,94,.4); }
+  .tyc.ti .tg { color:var(--g); }
+  .tyc.yong { border-color:rgba(227,179,65,.4); }
+  .tyc.yong .tg { color:var(--y); }
+  .vs { display:flex; align-items:center; color:var(--d); font-size:13px; }
+  .divider { height:1px; background:var(--line); margin:18px 0; }
+  .item { margin-top:12px; }
+  .item .k { color:var(--b); font-size:13.5px; font-weight:600; }
+  .item .v { margin-top:3px; font-size:14.5px; }
+  .verdict { margin-top:16px; padding:14px 18px; border-radius:10px; font-size:15px;
+    background:rgba(188,140,255,.07); border:1px dashed rgba(188,140,255,.3); }
+  .note { color:#4a5160; font-size:12.5px; text-align:center; margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 返回菜单</a>
+  <header>
+    <div class="ic">🌸</div>
+    <h1>梅花易数</h1>
+    <div class="sub">以数起卦，体用生克断吉凶 · 传为北宋邵雍所创</div>
+  </header>
+
+  <div class="panel">
+    <div class="inputs">
+      <input id="n1" type="number" placeholder="前数" min="1">
+      <span style="color:var(--d)">÷ 8 取余 → 上卦</span>
+    </div>
+    <div class="inputs" style="margin-top:10px">
+      <input id="n2" type="number" placeholder="后数" min="1">
+      <span style="color:var(--d)">÷ 8 取余 → 下卦</span>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="go">起卦</button>
+      <button class="btn mini" id="rand">随机两数</button>
+      <button class="btn mini" id="now">按当前时间起卦</button>
+    </div>
+    <div class="hint">心中默念所问之事，随手报两个数字；或直接用当前时间起卦</div>
+
+    <div class="result" id="result">
+      <div class="divider"></div>
+      <div class="guacard">
+        <div class="name" id="gname"></div>
+        <div class="ci" id="gci"></div>
+      </div>
+      <div class="tiyong">
+        <div class="tyc ti" id="tiBox">
+          <div class="role">体卦 · 你</div>
+          <div class="tg" id="tiName"></div>
+          <div class="wx" id="tiWx"></div>
+        </div>
+        <div class="vs">生克</div>
+        <div class="tyc yong" id="yongBox">
+          <div class="role">用卦 · 所问之事</div>
+          <div class="tg" id="yongName"></div>
+          <div class="wx" id="yongWx"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="item"><div class="k">动爻</div><div class="v" id="dong"></div></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="item"><div class="k">建议</div><div class="v" id="advice"></div></div>
+    </div>
+  </div>
+
+  <p class="note">梅花易数占法为简化实现（数字起卦 / 时间起卦）· 结果仅供娱乐参考</p>
+</div>
+
+<script src="js/gua64.js"></script>
+<script>
+var WX = { '金':'金', '木':'木', '水':'水', '火':'火', '土':'土' };
+/* 五行生克：key 生 value */
+var SHENG = { '木':'火', '火':'土', '土':'金', '金':'水', '水':'木' };
+var KE = { '木':'土', '土':'水', '水':'火', '火':'金', '金':'木' };
+
+function wxRelation(tiWx, yongWx) {
+  if (tiWx === yongWx) return 'he';
+  if (SHENG[tiWx] === yongWx) return 'tiSheng';   /* 体生用：泄 */
+  if (SHENG[yongWx] === tiWx) return 'yongSheng'; /* 用生体：助 */
+  if (KE[tiWx] === yongWx) return 'tiKe';         /* 体克用：财 */
+  return 'yongKe';                                /* 用克体：忌 */
+}
+
+var VERDICTS = {
+  he:        { t:'体用比和，五行同气。', v:'诸事顺遂，谋为有助，此为占者最喜之象。行事宜积极，多有贵人同类相帮。' },
+  yongSheng: { t:'用生体，事来就我。', v:'大吉之象。所问之事反来生助于你，得来全不费工夫，或有人主动相助，收益可期。' },
+  tiKe:      { t:'体克用，我去求事。', v:'小吉。事可成，但须费力求之，如农夫耕田，一分耕耘一分收获。财可得，力亦须出。' },
+  tiSheng:   { t:'体生用，我去生事。', v:'有耗泄之象。为事操劳耗力，投入多回报少，宜守不宜攻，恐有分心泄气之患。' },
+  yongKe:    { t:'用克体，事来克我。', v:'不吉之象。所问之事于你有阻有损，如重石压苗。宜暂缓图之，谨防口舌损耗。' }
+};
+
+var ADVICE = [
+  '宜静待时机，勿妄动。', '可寻属相或方向相合之人相助。', '事宜速办，久则生变。',
+  '近日当谨言慎行，防口舌。', '此事以柔克刚为上策。', '方位上利于此时所起之卦象，出行可参考。',
+  '守成为上，进取次之。', '心念专一，勿三心二意，则事更顺。'
+];
+
+function doGua(upperNum, lowerNum, dongNum) {
+  var u = ((upperNum % 8) + 8) % 8 || 8;
+  var l = ((lowerNum % 8) + 8) % 8 || 8;
+  var dong = ((dongNum % 6) + 6) % 6 || 6;   /* 1~6 爻 */
+  var ub = TRIGRAM_ORDER[u - 1], lb = TRIGRAM_ORDER[l - 1];
+  var lines = [];
+  for (var i = 0; i < 3; i++) lines.push(lb[i] === '1');
+  for (var j = 0; j < 3; j++) lines.push(ub[j] === '1');
+  var gua = lookupGua(lines);
+
+  var dongIdx = dong - 1;            /* 0-based */
+  var dongInUpper = dongIdx >= 3;
+  var yongTrigram = dongInUpper ? gua.upper : gua.lower;
+  var tiTrigram = dongInUpper ? gua.lower : gua.upper;
+  var rel = wxRelation(tiTrigram.wx, yongTrigram.wx);
+  var vd = VERDICTS[rel];
+
+  document.getElementById('gname').textContent = gua.name;
+  document.getElementById('gci').textContent = '《卦辞》' + gua.guaCi;
+  document.getElementById('tiName').textContent = tiTrigram.name + '（' + tiTrigram.xiang + '）';
+  document.getElementById('tiWx').textContent = '五行属' + tiTrigram.wx + ' · 先天数' + tiTrigram.num;
+  document.getElementById('yongName').textContent = yongTrigram.name + '（' + yongTrigram.xiang + '）';
+  document.getElementById('yongWx').textContent = '五行属' + yongTrigram.wx + ' · 先天数' + yongTrigram.num;
+  document.getElementById('dong').textContent = '第 ' + dong + ' 爻动（' + ['初','二','三','四','五','上'][dongIdx] + '爻）· 动于' + (dongInUpper ? '上卦，故上为用、下为体' : '下卦，故下为用、上为体');
+  document.getElementById('verdict').innerHTML = '<b>' + vd.t + '</b><br>' + vd.v;
+  document.getElementById('advice').textContent = ADVICE[Math.floor(Math.random() * ADVICE.length)];
+  document.getElementById('result').style.display = 'block';
+}
+
+document.getElementById('go').addEventListener('click', function() {
+  var a = parseInt(document.getElementById('n1').value, 10);
+  var b = parseInt(document.getElementById('n2').value, 10);
+  if (!a || !b || a < 1 || b < 1) { alert('请先输入两个正整数'); return; }
+  doGua(a, b, a + b);
+});
+
+document.getElementById('rand').addEventListener('click', function() {
+  document.getElementById('n1').value = Math.floor(Math.random() * 300) + 1;
+  document.getElementById('n2').value = Math.floor(Math.random() * 300) + 1;
+  doGua(parseInt(document.getElementById('n1').value, 10), parseInt(document.getElementById('n2').value, 10),
+        parseInt(document.getElementById('n1').value, 10) + parseInt(document.getElementById('n2').value, 10));
+});
+
+document.getElementById('now').addEventListener('click', function() {
+  var d = new Date();
+  var branchNum = ((d.getFullYear() - 4) % 12 + 12) % 12 + 1; /* 年支序数：子=1..亥=12 */
+  var month = d.getMonth() + 1, day = d.getDate();
+  var hourBranch = Math.floor(((d.getHours() + 1) % 24) / 2); /* 23-1子=0, 1-3丑=1 ... */
+  var shang = branchNum + month + day;
+  var xia = shang + hourBranch;
+  document.getElementById('n1').value = shang;
+  document.getElementById('n2').value = xia;
+  doGua(shang, xia, shang + xia);
+});
+</script>
+</body>
+</html>

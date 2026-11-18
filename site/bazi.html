@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>八字排盘 · Hermes 周易</title>
+<style>
+  :root { --bg:#0b0e14; --card:#12161f; --card2:#161b26; --fg:#d7dce5; --d:#8b93a3;
+    --g:#39ff5e; --b:#58a6ff; --y:#e3b341; --r:#ff7b72; --edge:rgba(88,166,255,.15); --line:#232a38;
+    --wxmu:#4ade80; --wxhuo:#f87171; --wxtu:#facc15; --wxjin:#e5e7eb; --wxshui:#60a5fa; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); line-height:1.7; min-height:100vh;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background-image:radial-gradient(900px 400px at 50% -100px, rgba(250,204,21,.05), transparent); }
+  .wrap { max-width:760px; margin:0 auto; padding:32px 20px 60px; }
+  .back { color:var(--d); text-decoration:none; font-size:14px; }
+  .back:hover { color:var(--y); }
+  header { text-align:center; margin:20px 0 6px; }
+  header .ic { font-size:44px; }
+  h1 { font-size:24px; margin-top:8px; }
+  header .sub { color:var(--d); font-size:13.5px; margin-top:6px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:24px; margin-top:24px; }
+  .inputs { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; align-items:center; }
+  .inputs input { background:var(--card2); border:1px solid var(--line); color:var(--fg);
+    border-radius:8px; padding:9px 12px; font-size:15px; font-family:inherit; outline:none; color-scheme:dark; }
+  .inputs input:focus { border-color:var(--y); }
+  .btnrow { display:flex; justify-content:center; margin-top:16px; }
+  .btn { background:rgba(234,179,8,.1); color:var(--y); border:1px solid rgba(234,179,8,.35);
+    border-radius:100px; padding:9px 34px; font-size:15px; font-family:inherit; cursor:pointer; transition:.2s; }
+  .btn:hover { background:rgba(234,179,8,.2); box-shadow:0 0 16px rgba(234,179,8,.25); }
+  .hint { text-align:center; color:var(--d); font-size:12.5px; margin-top:12px; }
+  .result { display:none; margin-top:26px; }
+  .pillars { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .pillar { background:var(--card2); border:1px solid var(--line); border-radius:12px;
+    padding:14px 18px; text-align:center; min-width:96px; }
+  .pillar .cap { color:var(--d); font-size:12.5px; }
+  .pillar .gz { font-size:34px; font-weight:700; line-height:1.3; font-family:KaiTi,STKaiti,serif; }
+  .pillar .wxs { font-size:12px; color:var(--d); }
+  .divider { height:1px; background:var(--line); margin:20px 0; }
+  .item { margin-top:12px; }
+  .item .k { color:var(--b); font-size:13.5px; font-weight:600; }
+  .item .v { margin-top:3px; font-size:14.5px; }
+  .bars { margin-top:10px; }
+  .barrow { display:flex; align-items:center; gap:10px; margin:6px 0; font-size:13.5px; }
+  .barrow .nm { width:30px; text-align:center; font-weight:700; }
+  .barrow .track { flex:1; height:12px; background:var(--card2); border-radius:6px; overflow:hidden; border:1px solid var(--line); }
+  .barrow .fill { height:100%; border-radius:6px; transition:width .8s; }
+  .barrow .cnt { width:52px; color:var(--d); font-size:12.5px; }
+  .verdict { margin-top:16px; padding:14px 18px; border-radius:10px; font-size:15px;
+    background:rgba(234,179,8,.06); border:1px dashed rgba(234,179,8,.3); }
+  .note { color:#4a5160; font-size:12.5px; text-align:center; margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 返回菜单</a>
+  <header>
+    <div class="ic">🀄</div>
+    <h1>八字排盘</h1>
+    <div class="sub">出生年月日时 → 四柱干支 · 五行强弱简析</div>
+  </header>
+
+  <div class="panel">
+    <div class="inputs">
+      <input id="date" type="date" min="1901-01-01" max="2099-12-31" value="1995-06-15">
+      <input id="time" type="time" value="12:00">
+    </div>
+    <div class="btnrow"><button class="btn" id="go">排盘</button></div>
+    <div class="hint">输入公历出生日期与时间（尽量精确到时辰）· 子时为 23:00–01:00</div>
+
+    <div class="result" id="result">
+      <div class="divider"></div>
+      <div class="pillars" id="pillars"></div>
+      <div class="divider"></div>
+      <div class="item"><div class="k">五行分布</div><div class="bars" id="bars"></div></div>
+      <div class="item"><div class="k">日主</div><div class="v" id="rz"></div></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="item"><div class="k">喜用参考</div><div class="v" id="xiyong"></div></div>
+    </div>
+  </div>
+
+  <p class="note">节气分界按近似日期（各年交节时间前后差一两天）· 强弱判断为简化算法 · 结果仅供娱乐参考</p>
+</div>
+
+<script>
+var STEMS = '甲乙丙丁戊己庚辛壬癸'.split('');
+var BRANCHES = '子丑寅卯辰巳午未申酉戌亥'.split('');
+var STEM_WX = ['木','木','火','火','土','土','金','金','水','水'];
+var BRANCH_WX = ['水','土','木','木','火','火','土','土','金','金','土','水'];
+var WX_COLOR = { '木':'var(--wxmu)', '火':'var(--wxhuo)', '土':'var(--wxtu)', '金':'var(--wxjin)', '水':'var(--wxshui)' };
+var SHENG = { '木':'火', '火':'土', '土':'金', '金':'水', '水':'木' };   /* key 生 value */
+var SHENG_WX = { '木':'水', '火':'木', '土':'火', '金':'土', '水':'金' }; /* value 生 key：印 = 生我者 */
+
+/* 按近似节气日期求月支序（寅=0）。返回 0~11 对应 寅..丑 */
+function monthBranchIndex(m, d) {
+  /* 返回地支索引：子=0 */
+  if (m === 1)  return d < 6 ? 0 : 1;        /* 子(上一年大雪起)→丑(小寒起) */
+  if (m === 2)  return d < 4 ? 1 : 2;        /* 丑→寅(立春) */
+  if (m === 3)  return d < 6 ? 2 : 3;       /* 寅→卯(惊蛰) */
+  if (m === 4)  return d < 5 ? 3 : 4;       /* 卯→辰(清明) */
+  if (m === 5)  return d < 6 ? 4 : 5;       /* 辰→巳(立夏) */
+  if (m === 6)  return d < 6 ? 5 : 6;       /* 巳→午(芒种) */
+  if (m === 7)  return d < 7 ? 6 : 7;       /* 午→未(小暑) */
+  if (m === 8)  return d < 8 ? 7 : 8;       /* 未→申(立秋) */
+  if (m === 9)  return d < 8 ? 8 : 9;       /* 申→酉(白露) */
+  if (m === 10) return d < 8 ? 9 : 10;      /* 酉→戌(寒露) */
+  if (m === 11) return d < 7 ? 10 : 11;     /* 戌→亥(立冬) */
+  if (m === 12) return d < 7 ? 11 : 0;      /* 亥(立冬)→子(大雪) */
+}
+
+function jdn(y, m, d) {
+  var a = Math.floor((14 - m) / 12);
+  var yy = y + 4800 - a, mm = m + 12 * a - 3;
+  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4)
+       - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+}
+
+document.getElementById('go').addEventListener('click', function() {
+  var dv = document.getElementById('date').value;
+  var tv = document.getElementById('time').value || '12:00';
+  if (!dv) { alert('请选择出生日期'); return; }
+  var parts = dv.split('-').map(Number);
+  var y = parts[0], m = parts[1], d = parts[2];
+  var hh = parseInt(tv.split(':')[0], 10), mm2 = parseInt(tv.split(':')[1], 10) || 0;
+
+  /* 年柱：以近似立春（2月4日）为界 */
+  var by = (m === 1 || (m === 2 && d < 4)) ? y - 1 : y;
+  var yStem = ((by - 4) % 10 + 10) % 10;
+  var yBranch = ((by - 4) % 12 + 12) % 12;
+
+  /* 月柱 */
+  var mb = monthBranchIndex(m, d);              /* 子=0..亥=11 */
+  /* 12月大雪后为子月，属上一年干支体系时仍沿用当前年遁（简化） */
+  var mOrder = ((mb - 2) % 12 + 12) % 12;       /* 寅月=0 */
+  var yearStartForYue = yStem;
+  var yinStartStem = [2,4,6,8,0][yearStartForYue % 5]; /* 甲己→丙(2) 乙庚→戊(4) 丙辛→庚(6) 丁壬→壬(8) 戊癸→甲(0) */
+  var mStem = (yinStartStem + mOrder) % 10;
+  var mBranch = mb;
+
+  /* 日柱：JDN + 49 mod 60（基准 2000-01-01 = 戊午） */
+  var idx = (((jdn(y, m, d) + 49) % 60) + 60) % 60;
+  var dStem = idx % 10, dBranch = idx % 12;
+
+  /* 时柱：五鼠遁 */
+  var hBranch = Math.floor((((hh + 1) % 24)) / 2);   /* 23点→0子 */
+  var shiStart = [0,2,4,6,8][dStem % 5];             /* 甲己→甲子(0) 乙庚→丙子(2) 丙辛→戊子(4) 丁壬→庚子(6) 戊癸→壬子(8) */
+  var hStem = (shiStart + hBranch) % 10;
+
+  var pz = [
+    { cap:'年柱', s:yStem, b:yBranch },
+    { cap:'月柱', s:mStem, b:mBranch },
+    { cap:'日柱', s:dStem, b:dBranch },
+    { cap:'时柱', s:hStem, b:hBranch }
+  ];
+
+  var pEl = document.getElementById('pillars');
+  pEl.innerHTML = '';
+  pz.forEach(function(p) {
+    var div = document.createElement('div');
+    div.className = 'pillar';
+    div.innerHTML = '<div class="cap">' + p.cap + '</div>'
+      + '<div class="gz"><span style="color:' + WX_COLOR[STEM_WX[p.s]] + '">' + STEMS[p.s] + '</span>'
+      + '<span style="color:' + WX_COLOR[BRANCH_WX[p.b]] + '">' + BRANCHES[p.b] + '</span></div>'
+      + '<div class="wxs">' + STEM_WX[p.s] + ' · ' + BRANCH_WX[p.b] + '</div>';
+    pEl.appendChild(div);
+  });
+
+  /* 五行统计（月支权重×3） */
+  var cnt = { '木':0, '火':0, '土':0, '金':0, '水':0 };
+  pz.forEach(function(p, i) {
+    cnt[STEM_WX[p.s]] += 1;
+    cnt[BRANCH_WX[p.b]] += (i === 1 ? 3 : 1);
+  });
+  var total = 0; for (var k in cnt) total += cnt[k];
+  var bars = document.getElementById('bars');
+  bars.innerHTML = '';
+  ['木','火','土','金','水'].forEach(function(wx) {
+    var row = document.createElement('div');
+    row.className = 'barrow';
+    row.innerHTML = '<div class="nm" style="color:' + WX_COLOR[wx] + '">' + wx + '</div>'
+      + '<div class="track"><div class="fill" style="width:0%;background:' + WX_COLOR[wx] + '"></div></div>'
+      + '<div class="cnt">' + cnt[wx] + ' 分</div>';
+    bars.appendChild(row);
+    requestAnimationFrame(function() {
+      setTimeout(function(){ row.querySelector('.fill').style.width = (cnt[wx] / total * 100) + '%'; }, 50);
+    });
+  });
+
+  /* 日主强弱 */
+  var dm = STEM_WX[dStem];
+  var same = cnt[dm];
+  var yin = cnt[SHENG_WX[dm]];          /* 印：生我者 */
+  var support = same + yin;
+  var ratio = support / total;
+  var st, stTxt;
+  if (ratio >= 0.45) { st = '偏强'; }
+  else if (ratio <= 0.28) { st = '偏弱'; }
+  else { st = '中和'; }
+
+  var dmTxt = '日主为「' + STEMS[dStem] + dm + '」，' + (st === '中和'
+    ? '五行中和，气机平稳，运限顺逆皆可承受，此为有利之基础。'
+    : st === '偏强'
+      ? dm + '气偏旺，身强能任财官。为人多有主见，行事主动，但防刚愎。运喜克泄耗（官杀、食伤、财星）以求平衡。'
+      : dm + '气偏弱，身弱需生扶。为人多思敏行，宜借力而行，防优柔断事。运喜印比（生我、同我之五行）以助身。');
+  document.getElementById('rz').textContent = dmTxt;
+
+  var strong = st === '偏强', weak = st === '偏弱';
+  var favor = strong ? [KE_EL(dm)] : [SHENG_WX[dm], dm];
+  function KE_EL(x){ return ({ '木':'土','土':'水','水':'火','火':'金','金':'木' })[x]; }
+  var fTxt = strong
+    ? '五行偏强，喜用「' + KE_EL(dm) + '」类事物平衡：'
+    : weak ? '五行偏弱，喜用「' + SHENG_WX[dm] + '」「' + dm + '」类事物补益：'
+    : '五行中和，无须刻意补益，顺其自然即可。若要调候，略喜「' + SHENG_WX[dm] + '」：';
+  var wxFav = strong ? KE_EL(dm) : (weak ? SHENG_WX[dm] : null);
+  var flavor = { '木':'绿色系、东方、春、木质与植物相关的事物', '火':'红色系、南方、夏、光明与热情相关的事物',
+    '土':'黄色系、中央、四季之交、踏实稳定相关的事物', '金':'白色金属色系、西方、秋、规则与果断相关的事物',
+    '水':'黑蓝色系、北方、冬、流动与智慧相关的事物' };
+  document.getElementById('xiyong').textContent = wxFav ? (fTxt + flavor[wxFav] + '。') : fTxt;
+
+  document.getElementById('result').style.display = 'block';
+});
+</script>
+</body>
+</html>
