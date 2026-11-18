@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#08090a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest-hub.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Alorith的笔记本</title>
+<style>
+  :root {
+    --bg:#ffffff; --panel:#ffffff; --elev:#f6f9fc;
+    --text:#061b31; --text2:#64748d;
+    --accent:#533afd; --accent-soft:rgba(83,58,253,.08);
+    --border:#e5edf5; --shadow:0 10px 30px rgba(50,50,93,.10);
+    --ruby:#ea2261; --magenta:#f96bee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#08090a; --panel:#0f1011; --elev:#191a1b;
+      --text:#f7f8f8; --text2:#8a8f98;
+      --accent:#7170ff; --accent-soft:rgba(113,112,255,.12);
+      --border:rgba(255,255,255,.08); --shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { height:100%; }
+  body {
+    font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.6; min-height:100%;
+    -webkit-font-smoothing:antialiased; overscroll-behavior-y:none;
+  }
+  .ribbon { height:3px; background:linear-gradient(90deg,var(--accent),var(--ruby),var(--magenta)); }
+  main {
+    max-width:520px; margin:0 auto;
+    padding:calc(30px + env(safe-area-inset-top,0px)) 20px calc(44px + env(safe-area-inset-bottom,0px));
+  }
+  header { text-align:center; margin-bottom:30px; }
+  .icon {
+    width:66px; height:66px; border-radius:17px; margin:0 auto 15px;
+    background:linear-gradient(135deg,var(--accent),var(--magenta));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 14px 34px rgba(83,58,253,.35);
+  }
+  .icon svg { width:34px; height:34px; }
+  h1 { font-size:25px; font-weight:600; letter-spacing:-.4px; max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sub { color:var(--text2); font-size:13.5px; margin-top:5px; }
+  .sec { margin-top:26px; }
+  .sec-h { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+  .sec-h h2 { font-size:16.5px; font-weight:600; }
+  .sec-h .meta { font-size:12px; color:var(--text2); font-variant-numeric:tabular-nums; }
+  .sec-h .meta b { color:var(--accent); font-weight:600; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; }
+  a.tile {
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between;
+    padding:16px 15px 13px; text-decoration:none; color:var(--text);
+    min-height:104px; transition:transform .12s ease; border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  a.tile:nth-child(2n) { border-right:none; }
+  a.tile:nth-child(n+3) { border-bottom:none; }
+  a.tile:active { transform:scale(.965); background:var(--elev); }
+  a.tile .ic { color:var(--accent); }
+  a.tile .ic svg { width:24px; height:24px; }
+  a.tile .t { font-size:15.5px; font-weight:600; margin-top:8px; }
+  a.tile .d { font-size:11.5px; color:var(--text2); margin-top:1px; }
+  .soon-tile {
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between;
+    padding:16px 15px 13px; min-height:104px; opacity:.6;
+  }
+  .soon-tile .ic { color:var(--text2); }
+  .soon-tile .ic svg { width:24px; height:24px; }
+  .soon-tile .t { font-size:15.5px; font-weight:600; margin-top:8px; }
+  .soon-tile .d { font-size:11.5px; color:var(--text2); margin-top:1px; }
+  footer { margin-top:36px; text-align:center; color:var(--text2); font-size:12px; line-height:1.9; }
+  footer a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="ribbon"></div>
+<main>
+  <header>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 9h7M8 13h7M8 17h4"/>
+      </svg>
+    </div>
+    <h1>Alorith的笔记本</h1>
+    <div class="sub">把纸质笔记搬上服务器 · 随时随地翻阅与自测</div>
+  </header>
+
+  <section class="sec">
+    <div class="sec-h">
+      <h2>📖 语文 · 文常卡片</h2>
+      <span class="meta"><b id="s1">–</b> 要点 · <b id="s2">–</b> 题</span>
+    </div>
+    <div class="card">
+      <div class="grid">
+        <a class="tile" href="/yuwen.html#study">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4h11a2 2 0 0 1 2 2v12"/></svg></span>
+          <div><div class="t">学习</div><div class="d">板块大卡 · 滑动翻页</div></div>
+        </a>
+        <a class="tile" href="/yuwen.html#read">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6c-2-1.5-4.5-2-8-2v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4c-3.5 0-6 .5-8 2z"/><path d="M12 6v14"/></svg></span>
+          <div><div class="t">通读</div><div class="d">全文 · 红字考点</div></div>
+        </a>
+        <a class="tile" href="/yuwen.html#search">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></span>
+          <div><div class="t">搜索</div><div class="d">要点即输即搜</div></div>
+        </a>
+        <a class="tile" href="/yuwen.html#quiz">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg></span>
+          <div><div class="t">刷题</div><div class="d">自测模式 · 逐题作答</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h">
+      <h2>🔤 英语 · 资料与答题</h2>
+      <span class="meta"><b id="e1">–</b> 板块 · <b id="e2">–</b> 题</span>
+    </div>
+    <div class="card">
+      <div class="grid">
+        <a class="tile" href="/yuwen.html?sub=eng#study">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2z"/><path d="M4 19a2 2 0 0 1 2-2h11"/></svg></span>
+          <div><div class="t">资料</div><div class="d">板块大卡 · 滑动翻页</div></div>
+        </a>
+        <a class="tile" href="/yuwen.html?sub=eng#quiz">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg></span>
+          <div><div class="t">答题</div><div class="d">自测模式 · 逐题作答</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <section class="sec">
+    <div class="sec-h"><h2>更多栏目</h2></div>
+    <div class="card">
+      <div class="grid">
+        <div class="soon-tile">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6 4 4 6-8"/><path d="M4 20h16"/></svg></span>
+          <div><div class="t">错题本</div><div class="d">施工中</div></div>
+        </div>
+        <div class="soon-tile">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+          <div><div class="t">单词卡</div><div class="d">施工中</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    由 <b style="color:var(--text)">Hermes Agent</b> 设计与开发 · 数据开源
+    <a href="https://github.com/Alorith-H/WenChang">GitHub</a><br>
+    浏览器菜单选「添加到主屏幕」可当 App 使用
+  </footer>
+</main>
+<script src="/js/promise.min.js"></script>
+<script src="/js/fetch.min.js"></script>
+<script>
+if (!window.Promise && window.ES6Promise) { window.Promise = ES6Promise.polyfill(); }
+fetch('/api/notebook/stats?subject=yuwen').then(function(r){ return r.json(); }).then(function(s) {
+  document.getElementById('s1').textContent = s.bullets;
+  document.getElementById('s2').textContent = s.questions;
+});
+fetch('/api/notebook/stats?subject=eng').then(function(r){ return r.json(); }).then(function(s) {
+  document.getElementById('e1').textContent = s.sections;
+  document.getElementById('e2').textContent = s.questions;
+}).catch(function(){});
+
+/* 登录后标题改成「{用户名}的笔记本」 */
+(function() {
+  var name = '';
+  try { var u = JSON.parse(localStorage.getItem('wc-user') || 'null'); name = (u && u.name) || ''; } catch (e) {}
+  if (!name) return;
+  var t = name + '的笔记本';
+  var h = document.querySelector('header h1');
+  if (h) {
+    h.textContent = t;
+    h.title = t;
+    if (name.length > 8) h.style.fontSize = '21px';
+  }
+  document.title = t;
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function(){}); });
+}
+</script>
+</body>
+</html>
