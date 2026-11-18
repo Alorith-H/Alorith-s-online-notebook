@@ -1,0 +1,19 @@
+# 用户数据：禁止入库
+users.db
+reports.db
+*.session
+sessions/
+.env
+*.cookie
+*_cookie*
+
+# 备份与临时文件
+*.bak*
+*.bak-*
+*.log
+__pycache__/
+*.pyc
+venv/
+.venv/
+node_modules/
+.DS_Store
