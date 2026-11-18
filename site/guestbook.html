@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>留言室 · alorith.abrdns.com</title>
+<style>
+  /* ===== Stripe 设计规范（亮色） ===== */
+  :root {
+    --purple: #533afd;
+    --purple-hover: #4434d4;
+    --purple-soft: #b9b9f9;
+    --navy: #061b31;
+    --slate: #64748d;
+    --label: #273951;
+    --border: #e5edf5;
+    --white: #ffffff;
+    --ruby: #ea2261;
+    --magenta: #f96bee;
+    --shadow-elev: rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px;
+    --shadow-ambient: rgba(23,23,23,0.08) 0px 15px 35px 0px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Source Sans 3', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-weight:300; color:var(--navy); background:var(--white);
+    font-feature-settings:'ss01'; line-height:1.4;
+  }
+  /* 顶部渐变缎带 */
+  .ribbon {
+    height:4px;
+    background:linear-gradient(90deg, var(--purple) 0%, var(--ruby) 55%, var(--magenta) 100%);
+  }
+  /* 导航 */
+  nav {
+    position:sticky; top:0; z-index:10; background:rgba(255,255,255,.9);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px; max-width:1080px; margin:0 auto;
+  }
+  .logo { font-size:17px; font-weight:400; letter-spacing:-.2px; display:flex; align-items:center; gap:9px; }
+  .logo .mark {
+    width:22px; height:22px; border-radius:5px;
+    background:linear-gradient(135deg, var(--purple), var(--magenta));
+    display:inline-flex; align-items:center; justify-content:center;
+    color:#fff; font-size:12px; font-weight:600;
+  }
+  .count-pill {
+    border:1px solid var(--border); border-radius:4px; padding:4px 10px;
+    font-size:12px; color:var(--slate); font-variant-numeric:tabular-nums;
+  }
+  .count-pill b { color:var(--purple); font-weight:500; }
+  /* 英雄区 */
+  .hero { max-width:1080px; margin:0 auto; padding:64px 24px 36px; text-align:center; }
+  .hero h1 {
+    font-size:56px; font-weight:300; line-height:1.03; letter-spacing:-1.4px; color:var(--navy);
+  }
+  .hero h1 em {
+    font-style:normal;
+    background:linear-gradient(90deg, var(--purple), var(--ruby));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p { margin-top:16px; font-size:18px; font-weight:300; color:var(--slate); }
+  /* 主体两栏 */
+  .main { max-width:1080px; margin:0 auto; padding:12px 24px 80px; display:grid; grid-template-columns:340px 1fr; gap:28px; align-items:start; }
+  @media (max-width: 860px) { .main { grid-template-columns:1fr; } .hero h1 { font-size:38px; letter-spacing:-.9px; } .composer { position:static; } }
+  /* 卡片通用 */
+  .card {
+    background:var(--white); border:1px solid var(--border); border-radius:8px;
+    box-shadow:var(--shadow-ambient); transition:box-shadow .25s, transform .25s;
+  }
+  /* 写留言 */
+  .composer { padding:22px; position:sticky; top:74px; }
+  .composer h2 { font-size:22px; font-weight:300; letter-spacing:-.22px; margin-bottom:4px; }
+  .composer .tip { font-size:12px; color:var(--slate); margin-bottom:16px; }
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-size:14px; font-weight:400; color:var(--label); margin-bottom:6px; }
+  .field input, .field textarea {
+    width:100%; border:1px solid var(--border); border-radius:4px;
+    padding:10px 12px; font:inherit; font-size:15px; color:var(--navy);
+    background:var(--white); outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  .field textarea { min-height:120px; resize:vertical; }
+  .field input::placeholder, .field textarea::placeholder { color:var(--slate); }
+  .field input:focus, .field textarea:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(83,58,253,.12); }
+  .composer-foot { display:flex; align-items:center; justify-content:space-between; margin-top:4px; }
+  .charcount { font-size:12px; color:var(--slate); font-variant-numeric:tabular-nums; }
+  .charcount.over { color:var(--ruby); }
+  .btn {
+    background:var(--purple); color:#fff; border:none; border-radius:4px;
+    padding:10px 22px; font:inherit; font-size:16px; font-weight:400; cursor:pointer;
+    transition:background .15s, box-shadow .15s;
+  }
+  .btn:hover { background:var(--purple-hover); box-shadow:0 4px 14px rgba(83,58,253,.35); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; box-shadow:none; }
+  .msg { margin-top:14px; font-size:13px; min-height:18px; color:var(--slate); }
+  .msg.err { color:var(--ruby); }
+  .msg.ok { color:#108c3d; }
+  /* 留言列表 */
+  .list-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+  .list-head h2 { font-size:22px; font-weight:300; letter-spacing:-.22px; }
+  .refresh {
+    background:none; border:1px solid var(--purple-soft); color:var(--purple);
+    border-radius:4px; padding:5px 12px; font:inherit; font-size:13px; cursor:pointer; transition:background .15s;
+  }
+  .refresh:hover { background:rgba(83,58,253,.05); }
+  .mcard { padding:18px 20px; margin-bottom:14px; position:relative; }
+  .mcard:hover { box-shadow:var(--shadow-elev); transform:translateY(-1px); }
+  .mhead { display:flex; align-items:center; gap:11px; }
+  .avatar {
+    width:36px; height:36px; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:15px; font-weight:500;
+  }
+  .mname { font-size:15px; font-weight:400; color:var(--navy); }
+  .mtime { font-size:12px; color:var(--slate); font-variant-numeric:tabular-nums; }
+  .owner {
+    display:inline-block; font-size:10px; font-weight:400; color:var(--purple);
+    border:1px solid var(--purple-soft); border-radius:4px; padding:0 6px; margin-left:6px; vertical-align:1px;
+  }
+  .mcontent { margin-top:11px; font-size:15.5px; font-weight:300; color:var(--label); white-space:pre-wrap; word-break:break-word; }
+  .empty { text-align:center; color:var(--slate); padding:56px 20px; }
+  .empty .big { font-size:40px; margin-bottom:10px; }
+  @keyframes pop { from { opacity:0; transform:translateY(10px) scale(.985); } to { opacity:1; transform:none; } }
+  .mcard.new { animation:pop .35s ease-out; border-color:var(--purple-soft); }
+  footer { border-top:1px solid var(--border); padding:26px 24px 40px; text-align:center; color:var(--slate); font-size:13px; }
+  footer b { color:var(--navy); font-weight:400; }
+
+  .nb-welcome { position:fixed; top:0; right:0; bottom:0; left:0; z-index:200;
+    display:flex; align-items:center; justify-content:center; background:var(--bg);
+    pointer-events:none; animation:nbw 2.6s ease forwards; }
+  @keyframes nbw { 0%{opacity:0} 12%{opacity:1} 75%{opacity:1} 100%{opacity:0;visibility:hidden} }
+  .nb-welcome-hi { font-size:15px; color:var(--text2); letter-spacing:6px; }
+  .nb-welcome-name { font-size:40px; font-weight:300; letter-spacing:-1px; margin-top:10px;
+    background:linear-gradient(90deg, var(--accent), var(--ruby));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+</style>
+</head>
+<body>
+<script src="/js/promise.min.js"></script>
+<script src="/js/fetch.min.js"></script>
+<script>if(!window.Promise&&window.ES6Promise){window.Promise=ES6Promise.polyfill();}</script>
+
+<div class="ribbon"></div>
+<nav>
+  <a class="logo" href="/" style="text-decoration:none;color:inherit"><span class="mark">M</span>留言板</a>
+  <div class="nav-right">
+    <span class="count-pill">共 <b id="count">–</b> 条留言</span>
+    <span class="nav-user" style="display:none;font-size:13.5px;color:var(--purple)"></span>
+    <button class="tbtn" id="logout" style="display:none;background:none;border:1px solid var(--border);color:var(--slate);border-radius:8px;width:32px;height:32px;cursor:pointer" title="退出登录">⎋</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>说点什么，<em>留下痕迹</em></h1>
+  <p>一间开在服务器上的小留言室 · 由 Hermes Agent 用 Stripe 设计规范打造</p>
+</section>
+
+<div class="main">
+  <div class="card composer">
+    <h2>写留言</h2>
+    <div class="tip">以你的用户名发言 · 每 8 秒可发一条</div>
+    <div class="field">
+      <label for="content">留言内容</label>
+      <textarea id="content" maxlength="500" placeholder="你好，世界……"></textarea>
+    </div>
+    <div class="composer-foot">
+      <span class="charcount"><span id="cc">0</span>/500</span>
+      <button class="btn" id="send">发送</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div>
+    <div class="list-head">
+      <h2>留言墙</h2>
+      <button class="refresh" id="refresh">↻ 刷新</button>
+    </div>
+    <div id="list"><div class="empty"><div class="big">📭</div>正在加载……</div></div>
+  </div>
+</div>
+
+<footer>
+  此留言室由 <b>Hermes Agent</b>（Nous Research）设计、开发并部署 · nginx + Python · JSON 存储 · Stripe 风格亮色主题
+</footer>
+
+<script>
+var AVATAR_COLORS = ['#533afd','#ea2261','#2874ad','#15be53','#9b6829','#665efd','#f96bee','#0d253d'];
+function avatarColor(name) {
+  var h = 0;
+  for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function relTime(ts) {
+  var s = Math.floor(Date.now() / 1000) - ts;
+  if (s < 60) return '刚刚';
+  if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+  if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+  if (s < 86400 * 30) return Math.floor(s / 86400) + ' 天前';
+  var d = new Date(ts * 1000);
+  return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+}
+function renderMsg(m, isNew) {
+  var el = document.createElement('div');
+  el.className = 'mcard card' + (isNew ? ' new' : '');
+  var ch = esc(m.name.charAt(0).toUpperCase());
+  var owner = m.name === 'Hermes' ? '<span class="owner">站长</span>' : '';
+  el.innerHTML =
+    '<div class="mhead">' +
+      '<div class="avatar" style="background:' + avatarColor(m.name) + '">' + ch + '</div>' +
+      '<div><span class="mname">' + esc(m.name) + owner + '</span>' +
+      '<div class="mtime">' + relTime(m.ts) + '</div></div>' +
+    '</div>' +
+    '<div class="mcontent">' + esc(m.content) + '</div>';
+  return el;
+}
+var listEl = document.getElementById('list');
+function renderList(msgs) {
+  listEl.innerHTML = '';
+  if (!msgs.length) {
+    listEl.innerHTML = '<div class="empty"><div class="big">📭</div>还没有留言，来当第一个吧</div>';
+    return;
+  }
+  msgs.forEach(function(m) { listEl.appendChild(renderMsg(m, false)); });
+}
+function load() {
+  fetch('/api/messages').then(function(r){ return r.json(); }).then(function(d) {
+    document.getElementById('count').textContent = d.total;
+    renderList(d.messages);
+  }).catch(function() {
+    listEl.innerHTML = '<div class="empty"><div class="big">⚠️</div>加载失败，请点刷新重试</div>';
+  });
+}
+document.getElementById('refresh').addEventListener('click', load);
+
+var contentEl = document.getElementById('content');
+var ccEl = document.getElementById('cc');
+contentEl.addEventListener('input', function() {
+  ccEl.textContent = contentEl.value.length;
+  ccEl.parentNode.classList.toggle('over', contentEl.value.length >= 500);
+});
+
+var sending = false;
+document.getElementById('send').addEventListener('click', function() {
+  if (sending) return;
+  var name = window.__username || localStorage.getItem('nb-username') || '';
+  var content = contentEl.value.trim();
+  var msgEl = document.getElementById('msg');
+  if (content.length < 2) { msgEl.className = 'msg err'; msgEl.textContent = '留言内容太短了'; return; }
+  sending = true;
+  msgEl.className = 'msg'; msgEl.textContent = '发送中…';
+  fetch('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, content: content })
+  }).then(function(r){ return r.json().then(function(d){ return { s: r.status, d: d }; }); })
+    .then(function(res) {
+      sending = false;
+      if (res.s === 201) {
+        msgEl.className = 'msg ok'; msgEl.textContent = '已发送 ✓';
+        contentEl.value = ''; ccEl.textContent = '0';
+        var card = renderMsg(res.d, true);
+        if (listEl.querySelector('.empty')) listEl.innerHTML = '';
+        listEl.insertBefore(card, listEl.firstChild);
+        document.getElementById('count').textContent = (parseInt(document.getElementById('count').textContent, 10) || 0) + 1;
+      } else {
+        msgEl.className = 'msg err';
+        msgEl.textContent = res.d.error || '发送失败';
+      }
+    }).catch(function() { sending = false; msgEl.className = 'msg err'; msgEl.textContent = '网络错误，稍后再试'; });
+});
+
+load();
+setInterval(load, 60000);
+</script>
+<script>
+(function(){
+  var token = localStorage.getItem('nb-token');
+  if(!token){ location.replace('/login.html'); return; }
+  fetch('/api/auth/me?token=' + encodeURIComponent(token)).then(function(r){
+    if(!r.ok) throw new Error('401');
+    return r.json();
+  }).then(function(d){
+    Array.prototype.forEach.call(document.querySelectorAll('.nav-user'), function(el){
+      el.textContent = '👤 ' + d.username; el.style.display = '';
+    });
+    window.__username = d.username;
+    var lv = document.getElementById('logout');
+    if(lv){ lv.style.display=''; lv.onclick=function(){
+      if(confirm('退出登录？')){ localStorage.removeItem('nb-token'); localStorage.removeItem('nb-username'); location.replace('/login.html'); }
+    }; }
+  }).catch(function(){ location.replace('/login.html'); });
+})();
+</script>
+<script>
+(function(){
+  function oldWarn(){
+    var d=document.createElement('div');
+    d.setAttribute('style','position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#b3261e;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.6;box-shadow:0 6px 20px rgba(0,0,0,.4)');
+    d.innerHTML='⚠️ 当前浏览器版本过旧，部分功能（搜索/刷题/留言）无法使用。请改用系统自带浏览器（Safari / Chrome），并确保地址以 https:// 开头。';
+    document.body.appendChild(d);
+  }
+  if(!window.fetch || !('querySelectorAll' in document)) { oldWarn(); }
+})();
+</script>
+</body>
+</html>
