@@ -39,7 +39,8 @@ CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT, section_id TEXT REFEREN
                    title TEXT, ord INTEGER, parent_id INTEGER);
 CREATE TABLE bullets(id INTEGER PRIMARY KEY AUTOINCREMENT, section_id TEXT REFERENCES sections(id),
                      item_id INTEGER, text TEXT, is_key INTEGER, segs TEXT, py TEXT, ord INTEGER);
-CREATE TABLE questions(id TEXT PRIMARY KEY, sec TEXT, q TEXT, a TEXT, src TEXT, hidden INTEGER DEFAULT 0);
+CREATE TABLE questions(id TEXT PRIMARY KEY, sec TEXT, q TEXT, a TEXT, src TEXT, hidden INTEGER DEFAULT 0,
+                       explain TEXT);
 CREATE INDEX idx_bullets_sec ON bullets(section_id);
 CREATE INDEX idx_items_sec ON items(section_id);
 CREATE INDEX idx_q_sec ON questions(sec);
@@ -101,9 +102,22 @@ if os.path.exists(EXTRA):
     qs = qs + ex["questions"]
 
 for q in qs:
-    c.execute("INSERT OR REPLACE INTO questions(id,sec,q,a,src,hidden) VALUES (?,?,?,?,?,?)",
+    c.execute("INSERT OR REPLACE INTO questions(id,sec,q,a,src,hidden,explain) VALUES (?,?,?,?,?,?,?)",
               (q["id"], q["sec"], q["q"], q.get("a", ""), q.get("src") or None,
-               1 if q["id"] in HIDDEN else 0))
+               1 if q["id"] in HIDDEN else 0, q.get("explain")))
+
+# 解析：独立 JSON 映射（id -> 解析文本），导入后统一回填
+EXPLAIN_FILE = "/root/workspace/projects/wenchang-data/questions_explain.json"
+if os.path.exists(EXPLAIN_FILE):
+    try:
+        em = json.load(open(EXPLAIN_FILE, encoding="utf-8"))
+        n_ex = 0
+        for rid, txt in em.items():
+            cur = c.execute("UPDATE questions SET explain=? WHERE id=?", (txt, rid))
+            n_ex += cur.rowcount
+        print("解析回填:", n_ex, "/", len(em))
+    except Exception as e:
+        print("解析回填失败:", e)
 db.commit()
 
 # 校验

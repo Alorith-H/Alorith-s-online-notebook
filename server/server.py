@@ -303,7 +303,7 @@ class Handler(BaseHTTPRequestHandler):
                     " c.title AS ch_title FROM bullets b JOIN sections s ON s.id = b.section_id"
                     " JOIN chapters c ON c.id = s.chapter_id ")
         sub = " AND COALESCE(c.subject,'yuwen')=? "      # 只搜本学科
-        q_base = ("SELECT q.id, q.sec, q.q, q.a, q.src FROM questions q"
+        q_base = ("SELECT q.id, q.sec, q.q, q.a, q.src, q.explain FROM questions q"
                   " JOIN sections s2 ON s2.id = q.sec JOIN chapters c2 ON c2.id = s2.chapter_id ")
         empty = {"results": [], "questions": [], "kw": kw, "mode": "exact", "fuzzy": False}
         if not kw:
