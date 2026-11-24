@@ -307,15 +307,6 @@
   .qres .qtag { display:block; width:fit-content; font-size:11.5px; color:var(--text2);
     border:1px solid var(--border); border-radius:5px; padding:0 6px; margin-top:6px; line-height:1.7; }
   .qres .qa { color:var(--green); font-size:13px; margin-top:4px; }
-  .qexp { margin-top:6px; font-size:13px; color:var(--text2); line-height:1.75;
-    border-left:2px solid var(--accent); padding:2px 0 2px 9px; }
-  .qexp b { color:var(--accent); font-weight:600; margin-right:5px; }
-  details.qexp { border-left:2px solid var(--border); }
-  details.qexp summary { cursor:pointer; color:var(--accent); font-size:12.5px; list-style:none; }
-  details.qexp summary::-webkit-details-marker { display:none; }
-  details.qexp summary::before { content:'▸ '; }
-  details.qexp[open] summary::before { content:'▾ '; }
-  details.qexp .qexp-t { margin-top:4px; }
 
   /* ===== 刷题 ===== */
   .progbar { height:3px; background:var(--border); border-radius:2px; margin:8px 0 14px; overflow:hidden; }
@@ -388,6 +379,7 @@
   .qsrc.on { display:block; }
   .qresult { margin-top:14px; font-size:15px; display:none; }
   .qresult.show { display:block; }
+  .qhint { margin-top:10px; font-size:13.5px; line-height:1.75; color:var(--text2); border-left:3px solid var(--accent); padding-left:10px; }
   .qresult .ans { color:var(--green); font-weight:600; }
   .qscore { text-align:center; padding:30px 20px; }
   .qscore .big { font-size:42px; font-weight:600; letter-spacing:-1px; color:var(--accent); font-variant-numeric:tabular-nums; }
@@ -1304,7 +1296,6 @@ function doSearch(save) {
         return '<div class="card qres" data-qid="' + q.id + '">' + qHtmlPlain(q.q) + statLine(q.id) +
           (q.src ? '<div class="qtag">来源：' + esc(q.src) + '</div>' : '') +
           '<div class="qa">答案：' + esc(q.a.split('|').join(' / ')) + '</div>' +
-          (q.explain ? '<details class="qexp"><summary>解析</summary><div class="qexp-t">' + esc(q.explain) + '</div></details>' : '') +
           '<div class="qacts">' +
             '<span class="qact" data-act="master" data-qid="' + q.id + '">' + (_on ? '取消标熟' : '标熟') + '</span>' +
             '<span class="qact" data-act="fix" data-qid="' + q.id + '">纠错</span>' +
@@ -1722,9 +1713,8 @@ document.getElementById('q-check').addEventListener('click', function() {
   var answers = QZ[qi].a.split('|');
   var r = document.getElementById('q-result');
   r.className = 'qresult show';
-  var _ex = (QZ[qi].explain || '').trim();
   r.innerHTML = '答案：<span class="ans">' + esc(answers.join(' / ')) + '</span>' +
-    (_ex ? '<div class="qexp"><b>解析</b>' + esc(_ex) + '</div>' : '');
+    (QZ[qi].explain ? '<div class="qhint">解析：' + esc(QZ[qi].explain) + '</div>' : '');
   this.style.display = 'none';
   document.getElementById('q-right').style.display = '';
   document.getElementById('q-fuzzy').style.display = '';
@@ -1806,8 +1796,7 @@ function endQuiz() {
   document.getElementById('end-score').textContent = firstOK + ' / ' + (qTotal || QZ.length);
   document.getElementById('end-detail').textContent = '正确率 ' + Math.round(firstOK / (qTotal || QZ.length) * 100) + '%' + (wrong.length ? ' · 错题在下面' : ' · 全对');
   document.getElementById('end-wrong').innerHTML = wrong.map(function(q) {
-    return '<div class="w">' + qHtmlPlain(q.q) + '<div class="wa">答案：' + esc(q.a.split('|').join(' / ')) + '</div>' + statLine(q.id) +
-      (q.explain ? '<div class="qexp"><b>解析</b>' + esc(q.explain) + '</div>' : '') + '</div>';
+    return '<div class="w">' + qHtmlPlain(q.q) + '<div class="wa">答案：' + esc(q.a.split('|').join(' / ')) + '</div>' + statLine(q.id) + '</div>';
   }).join('');
   if (typeof renderEndDue === 'function') renderEndDue();
   syncQbar();
